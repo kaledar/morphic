@@ -8,7 +8,7 @@ export const maxDuration = 60
 export default function Page({
   searchParams
 }: {
-  searchParams: { q: string }
+  searchParams: { q: string; from: string }
 }) {
   if (!searchParams.q) {
     redirect('/')
@@ -17,7 +17,7 @@ export default function Page({
 
   return (
     <AI initialAIState={{ chatId: id, messages: [] }}>
-      <Chat id={id} query={searchParams.q} />
+      <Chat id={id} query={searchParams.q} from={searchParams.from} />
     </AI>
   )
 }

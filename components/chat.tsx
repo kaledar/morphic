@@ -9,9 +9,10 @@ import { useUIState } from 'ai/rsc'
 type ChatProps = {
   id?: string
   query?: string
+  from?: string
 }
 
-export function Chat({ id, query }: ChatProps) {
+export function Chat({ id, query, from }: ChatProps) {
   const path = usePathname()
   const [messages] = useUIState()
 
@@ -24,7 +25,7 @@ export function Chat({ id, query }: ChatProps) {
   return (
     <div className="px-8 sm:px-12 pt-12 md:pt-14 pb-14 md:pb-24 max-w-3xl mx-auto flex flex-col space-y-3 md:space-y-4">
       <ChatMessages messages={messages} />
-      <ChatPanel messages={messages} query={query} />
+      <ChatPanel messages={messages} query={query} from={from} />
     </div>
   )
 }

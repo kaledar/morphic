@@ -8,6 +8,8 @@ export const maxDuration = 60
 export interface SearchPageProps {
   params: {
     id: string
+    query: string
+    from: string
   }
 }
 
@@ -37,7 +39,7 @@ export default async function SearchPage({ params }: SearchPageProps) {
         messages: chat.messages
       }}
     >
-      <Chat id={params.id} />
+      <Chat id={params.id} query={params.query} from={params.from} />
     </AI>
   )
 }

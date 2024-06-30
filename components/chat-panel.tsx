@@ -16,10 +16,12 @@ import { useAppState } from '@/lib/utils/app-state'
 interface ChatPanelProps {
   messages: UIState
   query?: string
+  from?: string
 }
 
-export function ChatPanel({ messages, query }: ChatPanelProps) {
+export function ChatPanel({ messages, query, from }: ChatPanelProps) {
   const [input, setInput] = useState('')
+  const [fromValue, setFromValue] = useState('')
   const [showEmptyScreen, setShowEmptyScreen] = useState(false)
   const [, setMessages] = useUIState<typeof AI>()
   const [aiMessage, setAIMessage] = useAIState<typeof AI>()
@@ -29,8 +31,13 @@ export function ChatPanel({ messages, query }: ChatPanelProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const isFirstRender = useRef(true) // For development environment
 
-  async function handleQuerySubmit(query: string, formData?: FormData) {
+  async function handleQuerySubmit(
+    query: string,
+    from: string,
+    formData?: FormData
+  ) {
     setInput(query)
+    setFromValue(from)
     setIsGenerating(true)
 
     // Add user message to UI state
@@ -46,6 +53,7 @@ export function ChatPanel({ messages, query }: ChatPanelProps) {
     const data = formData || new FormData()
     if (!formData) {
       data.append('input', query)
+      data.append('from', from)
     }
     const responseMessage = await submit(data)
     setMessages(currentMessages => [...currentMessages, responseMessage])
@@ -54,17 +62,17 @@ export function ChatPanel({ messages, query }: ChatPanelProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
-    await handleQuerySubmit(input, formData)
+    await handleQuerySubmit(input, 'web', formData)
   }
 
   // if query is not empty, submit the query
   useEffect(() => {
-    if (isFirstRender.current && query && query.trim().length > 0) {
-      handleQuerySubmit(query)
+    if (isFirstRender.current && from && query && query.trim().length > 0) {
+      handleQuerySubmit(query, from)
       isFirstRender.current = false
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query])
+  }, [query, from])
 
   useEffect(() => {
     const lastMessage = aiMessage.messages.slice(-1)[0]

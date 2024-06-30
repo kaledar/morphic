@@ -24,7 +24,35 @@ import { VideoSearchSection } from '@/components/video-search-section'
 import { transformToolMessages } from '@/lib/utils'
 import { AnswerSection } from '@/components/answer-section'
 import { ErrorCard } from '@/components/error-card'
-import { use } from 'react'
+
+async function getRecommendations(
+  query: string,
+  collection: string
+): Promise<any> {
+  const template =
+    process.env.RECOMMENDATION_API_URL ||
+    'http://localhost:3334/collection/{collection}/search?text={query}'
+
+  const url = template
+    .replace('{collection}', encodeURIComponent(collection))
+    .replace('{query}', encodeURIComponent(query))
+
+  try {
+    const response = await fetch(url)
+    if (!response.ok) {
+      console.error(
+        'Failed to fetch recommendations:',
+        response.status,
+        response.statusText
+      )
+      return null
+    }
+    return await response.json()
+  } catch (error) {
+    console.error('Error making HTTP request:', error)
+    return null
+  }
+}
 
 async function submit(
   formData?: FormData,
@@ -61,12 +89,33 @@ async function submit(
     process.env.OLLAMA_MODEL && process.env.OLLAMA_BASE_URL
   )
   const maxMessages = useSpecificAPI ? 5 : useOllamaProvider ? 1 : 10
+
   // Limit the number of messages to the maximum
   messages.splice(0, Math.max(messages.length - maxMessages, 0))
+
   // Get the user input from the form data
-  const userInput = skip
+  let userInput = skip
     ? `{"action": "skip"}`
     : (formData?.get('input') as string)
+
+  const from = (formData?.get('from') as string) || 'mobile'
+
+  let modifiedQuery = userInput
+  if (!skip && from === 'web') {
+    const recommendations = await getRecommendations(userInput, 'articles')
+    if (recommendations && recommendations.length > 0) {
+      const titles = recommendations
+        .map((item: { body: any }) => item.body)
+        .join(', ')
+      modifiedQuery = `Provide information about the following items: ${titles}. Original query: ${userInput}`
+
+      if (formData) {
+        formData.set('input', modifiedQuery)
+      }
+    }
+  }
+
+  userInput = modifiedQuery
 
   const content = skip
     ? userInput
