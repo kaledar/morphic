@@ -10,9 +10,12 @@ const HistoryContainer: React.FC<HistoryContainerProps> = async ({
   location
 }) => {
   return (
-    <div
-      className={location === 'header' ? 'block sm:hidden' : 'hidden sm:block'}
-    >
+    // To make the history container visible
+    // TODO: Fix accordingly
+    //<div
+    //  className={location === 'header' ? 'block sm:hidden' : 'hidden sm:block'}
+    //>
+    <div>
       <History location={location}>
         <HistoryList userId="anonymous" />
       </History>

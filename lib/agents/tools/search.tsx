@@ -5,59 +5,67 @@ import { searchSchema } from '@/lib/schema/search'
 import { SearchSection } from '@/components/search-section'
 import { ToolProps } from '.'
 
-export const searchTool = ({ uiStream, fullResponse }: ToolProps) => tool({
-  description: 'Search the web for information',
-  parameters: searchSchema,
-  execute: async ({
-    query,
-    max_results,
-    search_depth,
-    include_domains,
-    exclude_domains
-  }) => {
-    let hasError = false
-    // Append the search section
-    const streamResults = createStreamableValue<string>()
-    uiStream.update(
-      <SearchSection
-        result={streamResults.value}
-        includeDomains={include_domains}
-      />
-    )
+export const searchTool = ({ uiStream, fullResponse }: ToolProps) =>
+  tool({
+    description: 'Search the web for information',
+    parameters: searchSchema,
+    execute: async ({
+      query,
+      max_results,
+      search_depth,
+      include_domains,
+      exclude_domains
+    }) => {
+      let hasError = false
 
-    // Tavily API requires a minimum of 5 characters in the query
-    const filledQuery =
-      query.length < 5 ? query + ' '.repeat(5 - query.length) : query
-    let searchResult
-    const searchAPI: 'tavily' | 'exa' = 'tavily'
-    try {
-      searchResult =
-        searchAPI === 'tavily'
-          ? await tavilySearch(
-              filledQuery,
-              max_results,
-              search_depth,
-              include_domains,
-              exclude_domains
-            )
-          : await exaSearch(query)
-    } catch (error) {
-      console.error('Search API error:', error)
-      hasError = true
-    }
+      // "news" is always included in the domains
+      const domainsToInclude = include_domains
+        ? [...include_domains, 'news']
+        : ['news']
+      const uniqueDomains = Array.from(new Set(domainsToInclude))
 
-    if (hasError) {
-      fullResponse = `An error occurred while searching for "${query}.`
-      uiStream.update(null)
-      streamResults.done()
+      // Append the search section
+      const streamResults = createStreamableValue<string>()
+      uiStream.update(
+        <SearchSection
+          result={streamResults.value}
+          includeDomains={uniqueDomains}
+        />
+      )
+
+      // Tavily API requires a minimum of 5 characters in the query
+      const filledQuery =
+        query.length < 5 ? query + ' '.repeat(5 - query.length) : query
+      let searchResult
+      const searchAPI: 'tavily' | 'exa' = 'tavily'
+      try {
+        searchResult =
+          searchAPI === 'tavily'
+            ? await tavilySearch(
+                filledQuery,
+                max_results,
+                search_depth,
+                include_domains,
+                exclude_domains
+              )
+            : await exaSearch(query)
+      } catch (error) {
+        console.error('Search API error:', error)
+        hasError = true
+      }
+
+      if (hasError) {
+        fullResponse = `An error occurred while searching for "${query}.`
+        uiStream.update(null)
+        streamResults.done()
+        return searchResult
+      }
+
+      streamResults.done(JSON.stringify(searchResult))
+
       return searchResult
     }
-
-    streamResults.done(JSON.stringify(searchResult))
-
-    return searchResult
-  }
-})
+  })
 
 async function tavilySearch(
   query: string,

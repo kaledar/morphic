@@ -57,7 +57,7 @@ export function getModel(useSubModel = false) {
     organization: '' // optional organization
   })
 
-  return openai.chat(openaiApiModel)
+  return openai.chat(openaiApiModel) //this is used as an underlying agent for the web search.
 }
 
 /**

@@ -102,12 +102,13 @@ async function submit(
   }
 
   async function processEvents() {
+    // Works in a loop
     // Show the spinner
     uiStream.append(<Spinner />)
 
     let action = { object: { next: 'proceed' } }
     // If the user skips the task, we proceed to the search
-    if (!skip) action = (await taskManager(messages)) ?? action
+    if (!skip) action = (await taskManager(messages)) ?? action //get task manager for the action.
 
     if (action.object.next === 'inquire') {
       // Generate inquiry
@@ -153,7 +154,7 @@ async function submit(
     ) {
       // Search the web and generate the answer
       const { fullResponse, hasError, toolResponses, finishReason } =
-        await researcher(uiStream, streamText, messages)
+        await researcher(uiStream, streamText, messages) // This is to do actual search and came from proceed, not inquire
       stopReason = finishReason || ''
       answer = fullResponse
       toolOutputs = toolResponses
@@ -261,7 +262,7 @@ async function submit(
     uiStream.done()
   }
 
-  processEvents()
+  processEvents() //actual loop
 
   return {
     id: generateId(),
@@ -294,7 +295,7 @@ const initialUIState: UIState = []
 // AI is a provider you wrap your application with so you can access AI and UI state in your components.
 export const AI = createAI<AIState, UIState>({
   actions: {
-    submit
+    submit //Manual entry point from UI
   },
   initialUIState,
   initialAIState,

@@ -6,7 +6,8 @@ import { getModel } from '../utils'
 export async function taskManager(messages: CoreMessage[]) {
   try {
     const result = await generateObject({
-      model: getModel(),
+      //role: user & content: actual text in the 'messages'
+      model: getModel(), //getting the underlying model: model is openai
       system: `As a professional web researcher, your primary objective is to fully comprehend the user's query, conduct thorough web searches to gather the necessary information, and provide an appropriate response.
     To achieve this, you must first analyze the user's input and determine the optimal course of action. You have two options at your disposal:
     1. "proceed": If the provided information is sufficient to address the query effectively, choose this option to proceed with the research and formulate a response.
@@ -17,7 +18,7 @@ export async function taskManager(messages: CoreMessage[]) {
     Make your choice wisely to ensure that you fulfill your mission as a web researcher effectively and deliver the most valuable assistance to the user.
     `,
       messages,
-      schema: nextActionSchema
+      schema: nextActionSchema // inquire or proceed
     })
 
     return result
