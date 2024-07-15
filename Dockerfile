@@ -1,13 +1,41 @@
-FROM oven/bun:1.1.3-alpine
+# Use the Bun base image
+FROM oven/bun:1.1.3-alpine as builder
 
-RUN apk add --no-cache nodejs npm git
+# Install necessary dependencies
+RUN apk add --no-cache nodejs npm
 
-RUN git clone --depth=1 https://github.com/miurla/morphic /app && \
-  rm -rf /app/.git && \
-  cd /app && \
-  bun i && \
-  bun next telemetry disable
-
+# Set working directory
 WORKDIR /app
 
-CMD ["bun", "dev"]
+# Copy package.json and bun.lockb (if it exists)
+COPY package.json bun.lockb* ./
+
+# Install dependencies
+RUN bun install
+
+# Copy the rest of the application code
+COPY . .
+
+# Build the Next.js application
+RUN bun run build
+
+# Disable Next.js telemetry
+RUN bun next telemetry disable
+
+# Start a new stage for a smaller final image
+FROM oven/bun:1.1.3-alpine
+
+# Copy the built application from the builder stage
+COPY --from=builder /app /app
+
+# Set working directory
+WORKDIR /app
+
+# Expose the port the app runs on
+EXPOSE 3000
+
+# Set environment variable for production
+ENV NODE_ENV=production
+
+# Run the application
+CMD ["bun", "start"]
