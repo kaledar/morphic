@@ -7,7 +7,8 @@ import { AnswerSection } from '@/components/answer-section'
 export async function researcher(
   uiStream: ReturnType<typeof createStreamableUI>,
   streamableText: ReturnType<typeof createStreamableValue<string>>,
-  messages: CoreMessage[]
+  messages: CoreMessage[],
+  from: string | null
 ) {
   let fullResponse = ''
   let hasError = false
@@ -45,7 +46,8 @@ export async function researcher(
     messages: processedMessages,
     tools: getTools({
       uiStream,
-      fullResponse
+      fullResponse,
+      from
     }),
     onFinish: async event => {
       finishReason = event.finishReason

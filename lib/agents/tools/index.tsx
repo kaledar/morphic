@@ -6,24 +6,28 @@ import { videoSearchTool } from './video-search'
 export interface ToolProps {
   uiStream: ReturnType<typeof createStreamableUI>
   fullResponse: string
+  from: string
 }
 
-export const getTools = ({ uiStream, fullResponse }: ToolProps) => {
+export const getTools = ({ uiStream, fullResponse, from }: ToolProps) => {
   const tools: any = {
     search: searchTool({
       uiStream,
-      fullResponse
+      fullResponse,
+      from
     }),
     retrieve: retrieveTool({
       uiStream,
-      fullResponse
+      fullResponse,
+      from
     })
   }
 
   if (process.env.SERPER_API_KEY) {
     tools.videoSearch = videoSearchTool({
       uiStream,
-      fullResponse
+      fullResponse,
+      from
     })
   }
 

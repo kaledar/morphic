@@ -24,35 +24,7 @@ import { VideoSearchSection } from '@/components/video-search-section'
 import { transformToolMessages } from '@/lib/utils'
 import { AnswerSection } from '@/components/answer-section'
 import { ErrorCard } from '@/components/error-card'
-
-async function getRecommendations(
-  query: string,
-  collection: string
-): Promise<any> {
-  const template =
-    process.env.RECOMMENDATION_API_URL ||
-    'http://localhost:3334/collection/{collection}/search?text={query}'
-
-  const url = template
-    .replace('{collection}', encodeURIComponent(collection))
-    .replace('{query}', encodeURIComponent(query))
-
-  try {
-    const response = await fetch(url)
-    if (!response.ok) {
-      console.error(
-        'Failed to fetch recommendations:',
-        response.status,
-        response.statusText
-      )
-      return null
-    }
-    return await response.json()
-  } catch (error) {
-    console.error('Error making HTTP request:', error)
-    return null
-  }
-}
+import { FromSingleton } from '@/lib/contexts/from-singleton'
 
 async function submit(
   formData?: FormData,
@@ -98,24 +70,8 @@ async function submit(
     ? `{"action": "skip"}`
     : (formData?.get('input') as string)
 
-  const from = (formData?.get('from') as string) || 'mobile'
-
-  let modifiedQuery = userInput
-  if (!skip && from === 'web') {
-    const recommendations = await getRecommendations(userInput, 'articles')
-    if (recommendations && recommendations.length > 0) {
-      const titles = recommendations
-        .map((item: { body: any }) => item.body)
-        .join(', ')
-      modifiedQuery = `Provide information about the following items: ${titles}. Original query: ${userInput}`
-
-      if (formData) {
-        formData.set('input', modifiedQuery)
-      }
-    }
-  }
-
-  userInput = modifiedQuery
+  const fromFormData = formData?.get('from') as string | undefined
+  const from = fromFormData || FromSingleton.getInstance().from
 
   const content = skip
     ? userInput
@@ -156,8 +112,10 @@ async function submit(
     uiStream.append(<Spinner />)
 
     let action = { object: { next: 'proceed' } }
+
+    // As we are using a domain set and tts we don't want inquire, intermediate step to refine user query
     // If the user skips the task, we proceed to the search
-    if (!skip) action = (await taskManager(messages)) ?? action //get task manager for the action.
+    //if (!skip) action = (await taskManager(messages)) ?? action //get task manager for the action.
 
     if (action.object.next === 'inquire') {
       // Generate inquiry
@@ -203,7 +161,7 @@ async function submit(
     ) {
       // Search the web and generate the answer
       const { fullResponse, hasError, toolResponses, finishReason } =
-        await researcher(uiStream, streamText, messages) // This is to do actual search and came from proceed, not inquire
+        await researcher(uiStream, streamText, messages, from) // This is to do actual search and came from proceed, not inquire
       stopReason = finishReason || ''
       answer = fullResponse
       toolOutputs = toolResponses
@@ -275,7 +233,7 @@ async function submit(
       // Add follow-up panel
       uiStream.append(
         <Section title="Follow-up">
-          <FollowupPanel />
+          <FollowupPanel from={from} />
         </Section>
       )
 
@@ -325,6 +283,7 @@ export type AIState = {
   messages: AIMessage[]
   chatId: string
   isSharePage?: boolean
+  from?: string
 }
 
 export type UIState = {

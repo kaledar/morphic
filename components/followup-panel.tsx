@@ -8,7 +8,7 @@ import type { AI } from '@/app/actions'
 import { UserMessage } from './user-message'
 import { ArrowRight } from 'lucide-react'
 
-export function FollowupPanel() {
+export function FollowupPanel({ from }: any) {
   const [input, setInput] = useState('')
   const { submit } = useActions()
   const [, setMessages] = useUIState<typeof AI>()
@@ -16,6 +16,7 @@ export function FollowupPanel() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const formData = new FormData(event.currentTarget as HTMLFormElement)
+    formData.set('form', from)
 
     const userMessage = {
       id: Date.now(),
