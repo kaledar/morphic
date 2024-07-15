@@ -5,6 +5,7 @@ import { Section } from './section'
 import { StreamableValue, useStreamableValue } from 'ai/rsc'
 import { BotMessage } from './message'
 import { useEffect, useState } from 'react'
+import SpeechPlayer from './speech-player'
 
 export type AnswerSectionProps = {
   result?: StreamableValue<string>
@@ -34,6 +35,11 @@ export function AnswerSection({
           <Skeleton className="h-6 w-48" />
           <Skeleton className="w-full h-6" />
         </div>
+      )}
+      {content && (
+        <Section>
+          <SpeechPlayer text={content} />
+        </Section>
       )}
     </div>
   )
