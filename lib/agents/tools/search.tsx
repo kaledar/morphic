@@ -4,8 +4,9 @@ import Exa from 'exa-js'
 import { searchSchema } from '@/lib/schema/search'
 import { SearchSection } from '@/components/search-section'
 import { ToolProps } from '.'
+import { SearchResults } from '@/lib/types'
 
-export const searchTool = ({ uiStream, fullResponse }: ToolProps) =>
+export const searchTool = ({ uiStream, fullResponse, from }: ToolProps) =>
   tool({
     description: 'Search the web for information',
     parameters: searchSchema,
@@ -37,18 +38,34 @@ export const searchTool = ({ uiStream, fullResponse }: ToolProps) =>
       const filledQuery =
         query.length < 5 ? query + ' '.repeat(5 - query.length) : query
       let searchResult
-      const searchAPI: 'tavily' | 'exa' = 'tavily'
+
+      type SearchAPI = 'tavily' | 'exa' | 'kaledar'
+      let searchAPI: SearchAPI = 'tavily' as SearchAPI
+
+      if (from === 'web') {
+        searchAPI = 'kaledar' as SearchAPI
+      }
+
       try {
-        searchResult =
-          searchAPI === 'tavily'
-            ? await tavilySearch(
-                filledQuery,
-                max_results,
-                search_depth,
-                include_domains,
-                exclude_domains
-              )
-            : await exaSearch(query)
+        switch (searchAPI) {
+          case 'tavily':
+            searchResult = await tavilySearch(
+              filledQuery,
+              max_results,
+              search_depth,
+              include_domains,
+              exclude_domains
+            )
+            break
+          case 'exa':
+            searchResult = await exaSearch(query)
+            break
+          case 'kaledar':
+            searchResult = await getRecommendations(query, 'articles')
+            break
+          default:
+            throw new Error(`Unsupported search API: ${searchAPI}`)
+        }
       } catch (error) {
         console.error('Search API error:', error)
         hasError = true
@@ -114,4 +131,39 @@ async function exaSearch(
     includeDomains,
     excludeDomains
   })
+}
+
+async function getRecommendations(
+  query: string,
+  collection: string
+): Promise<SearchResults> {
+  const template =
+    process.env.RECOMMENDATION_API_URL ||
+    'http://localhost:3334/collection/{collection}/search?text={query}'
+
+  const url = template
+    .replace('{collection}', encodeURIComponent(collection))
+    .replace('{query}', encodeURIComponent(query))
+
+  try {
+    const response = await fetch(url)
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+    const articles = await response.json()
+    return {
+      query, // Pass the original query for consistency.
+      images: [], // TODO: Later on we may use our AssetHQ images which are related to the collectionItems returned from the embeddings query
+      results: articles.map((article: any) => ({
+        title: '', //article.title,  // Direct mapping from the article.
+        url: 'https://www.google.com', //article.url,      // TODO: We can use our own published articles urls here
+        content: article.body || 'No summary available.' // Assume 'summary' field is used, fallback to a default text if missing.
+      }))
+    }
+  } catch (error) {
+    console.error('Failed to fetch recommendations:', error)
+    return {
+      query,
+      images: [],
+      results: [] // Return empty arrays on error as a safe fallback.
+    }
+  }
 }
