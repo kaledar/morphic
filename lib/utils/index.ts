@@ -5,6 +5,8 @@ import { createOpenAI } from '@ai-sdk/openai'
 import { google } from '@ai-sdk/google'
 import { anthropic } from '@ai-sdk/anthropic'
 import { CoreMessage } from 'ai'
+import { OpenAIAssistantLanguageModel } from './openai-assistant-language-model'
+import { SimpleOpenAIAssistantLanguageModel } from './simple-assistant-language-model'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -17,6 +19,7 @@ export function getModel(useSubModel = false) {
   const openaiApiBase = process.env.OPENAI_API_BASE
   const openaiApiKey = process.env.OPENAI_API_KEY
   let openaiApiModel = process.env.OPENAI_API_MODEL || 'gpt-4o'
+  const openaiAssistantId = process.env.OPENAI_ASSISTANT_ID || 'assistantId'
   const googleApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
   const anthropicApiKey = process.env.ANTHROPIC_API_KEY
 
@@ -50,14 +53,53 @@ export function getModel(useSubModel = false) {
   }
 
   // Fallback to OpenAI instead
+  if (openaiApiKey && openaiAssistantId) {
+    console.log(`openai assistant is being used!`)
+    return new SimpleOpenAIAssistantLanguageModel(
+      openaiApiKey,
+      openaiAssistantId
+    )
+    /*
+    return new OpenAIAssistantLanguageModel(
+      openaiApiModel,
+      {},
+      {
+        provider: 'openai',
+        compatibility: 'compatible',
+        headers: () => ({
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          'OpenAI-Beta': 'assistants=v2'
+        }),
+        url: ({ modelId, path }) => `https://api.openai.com/v1${path}`
+      },
+      openaiAssistantId
+    )
+      */
+  }
+
+  // Fallback to standard OpenAI chat model if Assistant ID is not provided
+  if (openaiApiKey) {
+    const openai = createOpenAI({
+      baseURL: openaiApiBase,
+      apiKey: openaiApiKey,
+      organization: ''
+    })
+    return openai.chat(openaiApiModel)
+  }
+
+  /*
 
   const openai = createOpenAI({
     baseURL: openaiApiBase, // optional base URL for proxies etc.
     apiKey: openaiApiKey, // optional API key, default to env property OPENAI_API_KEY
-    organization: '' // optional organization
+    organization: '' //, // optional organization
+    //headers: {
+    //  'OpenAI-Assistant-Id': openaiAssistantId // Add assistant ID in headers
+    //}
   })
 
   return openai.chat(openaiApiModel) //this is used as an underlying agent for the web search.
+  */
 }
 
 /**
