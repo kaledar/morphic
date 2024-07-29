@@ -61,7 +61,7 @@ export const searchTool = ({ uiStream, fullResponse, from }: ToolProps) =>
             searchResult = await exaSearch(query)
             break
           case 'kaledar':
-            searchResult = await getRecommendations(query, 'articles')
+            searchResult = await getRecommendations(query)
             break
           default:
             throw new Error(`Unsupported search API: ${searchAPI}`)
@@ -133,30 +133,21 @@ async function exaSearch(
   })
 }
 
-async function getRecommendations(
-  query: string,
-  collection: string
-): Promise<SearchResults> {
+async function getRecommendations(query: string): Promise<SearchResults> {
   const template =
     process.env.RECOMMENDATION_API_URL ||
-    'http://localhost:3334/collection/{collection}/search?text={query}'
+    'http://localhost:3334/search-news-assets?searchQuery={query}'
 
-  const url = template
-    .replace('{collection}', encodeURIComponent(collection))
-    .replace('{query}', encodeURIComponent(query))
+  const url = template.replace('{query}', encodeURIComponent(query))
 
   try {
     const response = await fetch(url)
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
-    const articles = await response.json()
+    const responseData = await response.json()
     return {
       query, // Pass the original query for consistency.
-      images: [], // TODO: Later on we may use our AssetHQ images which are related to the collectionItems returned from the embeddings query
-      results: articles.map((article: any) => ({
-        title: '', //article.title,  // Direct mapping from the article.
-        url: 'https://www.google.com', //article.url,      // TODO: We can use our own published articles urls here
-        content: article.body || 'No summary available.' // Assume 'summary' field is used, fallback to a default text if missing.
-      }))
+      images: responseData.images,
+      results: responseData.results
     }
   } catch (error) {
     console.error('Failed to fetch recommendations:', error)
