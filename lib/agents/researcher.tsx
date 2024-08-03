@@ -39,7 +39,7 @@ export async function researcher(
     Don't mention those guidelines or other stuff in the response, but do it accordingly. 
     Besides that tell me how you have trained for the context of user search criteria and the tool response just for now.
     List the details of the context for the results you have trained for like TRT's policies. 
-    Finally, you have to answer with the language of the user.`,
+    Finally, you have to answer with the language of the user which is generally either english or turkish.`,
     /*
     system: `As a professional search expert, you possess the ability to search for any information on the web.
     or any information on the web.

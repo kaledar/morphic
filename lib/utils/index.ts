@@ -6,9 +6,6 @@ import { google } from '@ai-sdk/google'
 import { anthropic } from '@ai-sdk/anthropic'
 import { CoreMessage } from 'ai'
 import { OpenAIAssistantLanguageModel } from './openai-assistant-language-model'
-import { SimpleOpenAIAssistantLanguageModel } from './simple-assistant-language-model'
-import { Yet1OpenAIAssistantLanguageModel } from './yet-another-custom-model1'
-import { Yet2OpenAIAssistantLanguageModel } from './yet2-another-custom-model2'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -54,39 +51,14 @@ export function getModel(useSubModel = false) {
     return anthropic('claude-3-5-sonnet-20240620')
   }
 
-  // Fallback to OpenAI instead
+  // Fallback to OpenAI assistant instead
   if (openaiApiKey && openaiAssistantId) {
     console.log(`openai assistant is being used!`)
     try {
-      return new Yet2OpenAIAssistantLanguageModel(
-        openaiApiKey,
-        openaiAssistantId
-      )
+      return new OpenAIAssistantLanguageModel(openaiApiKey, openaiAssistantId)
     } catch (err) {
       console.log(err)
     }
-    /*
-    return new SimpleOpenAIAssistantLanguageModel(
-      openaiApiKey,
-      openaiAssistantId
-    )
-      */
-    /*
-    return new OpenAIAssistantLanguageModel(
-      openaiApiModel,
-      {},
-      {
-        provider: 'openai',
-        compatibility: 'compatible',
-        headers: () => ({
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-          'OpenAI-Beta': 'assistants=v2'
-        }),
-        url: ({ modelId, path }) => `https://api.openai.com/v1${path}`
-      },
-      openaiAssistantId
-    )
-      */
   }
 
   // Fallback to standard OpenAI chat model if Assistant ID is not provided
@@ -98,20 +70,6 @@ export function getModel(useSubModel = false) {
     })
     return openai.chat(openaiApiModel)
   }
-
-  /*
-
-  const openai = createOpenAI({
-    baseURL: openaiApiBase, // optional base URL for proxies etc.
-    apiKey: openaiApiKey, // optional API key, default to env property OPENAI_API_KEY
-    organization: '' //, // optional organization
-    //headers: {
-    //  'OpenAI-Assistant-Id': openaiAssistantId // Add assistant ID in headers
-    //}
-  })
-
-  return openai.chat(openaiApiModel) //this is used as an underlying agent for the web search.
-  */
 }
 
 /**
