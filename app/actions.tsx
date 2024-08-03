@@ -57,10 +57,12 @@ async function submit(
   const groupeId = generateId()
 
   const useSpecificAPI = process.env.USE_SPECIFIC_API_FOR_WRITER === 'true'
+  //const useSpecificAPI = true
   const useOllamaProvider = !!(
     process.env.OLLAMA_MODEL && process.env.OLLAMA_BASE_URL
   )
   const maxMessages = useSpecificAPI ? 5 : useOllamaProvider ? 1 : 10
+  //const maxMessages = 5
 
   // Limit the number of messages to the maximum
   messages.splice(0, Math.max(messages.length - maxMessages, 0))
@@ -151,6 +153,7 @@ async function submit(
     uiStream.update(
       <AnswerSection result={streamText.value} hasHeader={false} />
     )
+    console.log(`actions: submit: processEvents: answer created! moving on...`)
 
     // If useSpecificAPI is enabled, only function calls will be made
     // If not using a tool, this model generates the answer
@@ -160,6 +163,9 @@ async function submit(
         : stopReason !== 'stop' && !errorOccurred
     ) {
       // Search the web and generate the answer
+      console.log(
+        `actions: submit: processEvents while stopReason not stop: calling researcher...`
+      )
       const { fullResponse, hasError, toolResponses, finishReason } =
         await researcher(uiStream, streamText, messages, from) // This is to do actual search and came from proceed, not inquire
       stopReason = finishReason || ''
@@ -168,6 +174,9 @@ async function submit(
       errorOccurred = hasError
 
       if (toolOutputs.length > 0) {
+        console.log(
+          `actions: submit: processEvents: researcher continue: toolOutputs: updating...`
+        )
         toolOutputs.map(output => {
           aiState.update({
             ...aiState.get(),
@@ -214,6 +223,8 @@ async function submit(
         processedMessages = [{ role: 'assistant', content: answer }]
       }
 
+      console.log(`assistant answered...`)
+
       streamText.done()
       aiState.update({
         ...aiState.get(),
@@ -228,8 +239,19 @@ async function submit(
         ]
       })
 
+      console.log(
+        `generating related queries with querySuggested: ${JSON.stringify(
+          processedMessages
+        ).substring(0, 1000)}`
+      )
+
       // Generate related queries
       const relatedQueries = await querySuggestor(uiStream, processedMessages)
+
+      console.log(
+        `Got related queries generated: ${JSON.stringify(relatedQueries)}`
+      )
+
       // Add follow-up panel
       uiStream.append(
         <Section title="Follow-up">

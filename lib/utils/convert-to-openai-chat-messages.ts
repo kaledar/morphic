@@ -12,6 +12,7 @@ export function convertToOpenAIChatMessages({
   prompt: LanguageModelV1Prompt
   useLegacyFunctionCalling?: boolean
 }): OpenAIChatPrompt {
+  //console.log(`PROMPT: ${JSON.stringify(prompt)}`)
   const messages: OpenAIChatPrompt = []
 
   for (const { role, content } of prompt) {

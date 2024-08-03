@@ -44,6 +44,7 @@ export async function writer(
       }
     })
     .catch(err => {
+      console.log(err)
       hasError = true
       fullResponse = 'Error: ' + err.message
       streamableAnswer.update(fullResponse)

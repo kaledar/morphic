@@ -7,6 +7,8 @@ import { anthropic } from '@ai-sdk/anthropic'
 import { CoreMessage } from 'ai'
 import { OpenAIAssistantLanguageModel } from './openai-assistant-language-model'
 import { SimpleOpenAIAssistantLanguageModel } from './simple-assistant-language-model'
+import { Yet1OpenAIAssistantLanguageModel } from './yet-another-custom-model1'
+import { Yet2OpenAIAssistantLanguageModel } from './yet2-another-custom-model2'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -55,10 +57,20 @@ export function getModel(useSubModel = false) {
   // Fallback to OpenAI instead
   if (openaiApiKey && openaiAssistantId) {
     console.log(`openai assistant is being used!`)
+    try {
+      return new Yet2OpenAIAssistantLanguageModel(
+        openaiApiKey,
+        openaiAssistantId
+      )
+    } catch (err) {
+      console.log(err)
+    }
+    /*
     return new SimpleOpenAIAssistantLanguageModel(
       openaiApiKey,
       openaiAssistantId
     )
+      */
     /*
     return new OpenAIAssistantLanguageModel(
       openaiApiModel,

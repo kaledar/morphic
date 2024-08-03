@@ -17,6 +17,7 @@ export const searchTool = ({ uiStream, fullResponse, from }: ToolProps) =>
       include_domains,
       exclude_domains
     }) => {
+      console.log(`Executing search...(RA)G`)
       let hasError = false
 
       // "news" is always included in the domains
@@ -80,6 +81,7 @@ export const searchTool = ({ uiStream, fullResponse, from }: ToolProps) =>
 
       streamResults.done(JSON.stringify(searchResult))
 
+      console.log(`search has been done!`)
       return searchResult
     }
   })

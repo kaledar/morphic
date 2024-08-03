@@ -3,6 +3,7 @@ import { CoreMessage, ToolCallPart, ToolResultPart, streamText } from 'ai'
 import { getTools } from './tools'
 import { getModel, transformToolMessages } from '../utils'
 import { AnswerSection } from '@/components/answer-section'
+import { ModeToggle } from '../../components/mode-toggle'
 
 export async function researcher(
   uiStream: ReturnType<typeof createStreamableUI>,
@@ -10,6 +11,7 @@ export async function researcher(
   messages: CoreMessage[],
   from: string | null
 ) {
+  //console.log(`messages...:${JSON.stringify(messages)}`)
   let fullResponse = ''
   let hasError = false
   let finishReason = ''
@@ -19,8 +21,9 @@ export async function researcher(
   const useOllamaProvider = !!(
     process.env.OLLAMA_MODEL && process.env.OLLAMA_BASE_URL
   )
-  if (useOllamaProvider) {
-    processedMessages = transformToolMessages(messages)
+  //if (useOllamaProvider) {
+  if (true) {
+    processedMessages = transformToolMessages(messages) //This is required in our case!!
   }
   const includeToolResponses = messages.some(message => message.role === 'tool')
   const useSubModel = useOllamaProvider && includeToolResponses
@@ -32,6 +35,12 @@ export async function researcher(
   const result = await streamText({
     model: getModel(useSubModel),
     maxTokens: 2500,
+    system: `As a trained and fine tuned assistant model, summarize tool results accoding to TRT's guidelines, policies and sensitiveness. 
+    Don't mention those guidelines or other stuff in the response, but do it accordingly. 
+    Besides that tell me how you have trained for the context of user search criteria and the tool response just for now.
+    List the details of the context for the results you have trained for like TRT's policies. 
+    Finally, you have to answer with the language of the user.`,
+    /*
     system: `As a professional search expert, you possess the ability to search for any information on the web.
     or any information on the web.
     For each user query, utilize the search results to their fullest potential to provide additional information and assistance in your response.
@@ -43,18 +52,22 @@ export async function researcher(
     If it is a domain instead of a URL, specify it in the include_domains of the search tool.
     Please match the language of the response to the user's language. Current date and time: ${currentDate}
     `,
+    */
     messages: processedMessages,
     tools: getTools({
       uiStream,
       fullResponse,
       from
     }),
+    toolChoice: 'required',
     onFinish: async event => {
+      console.log(`researcher: streamText has been finished..`)
       finishReason = event.finishReason
       fullResponse = event.text
       streambleAnswer.done()
     }
-  }).catch(err => {
+  }).catch((err: Error) => {
+    console.log(`researcher: streamText error: ${err.stack}`)
     hasError = true
     fullResponse = 'Error: ' + err.message
     streamableText.update(fullResponse)
@@ -62,20 +75,25 @@ export async function researcher(
 
   // If the result is not available, return an error response
   if (!result) {
+    console.log(`researcher: no results.`)
     return { result, fullResponse, hasError, toolResponses: [] }
   }
 
   const hasToolResult = messages.some(message => message.role === 'tool')
   if (hasToolResult) {
+    console.log(`researcher: has tool result`)
     uiStream.append(answerSection)
   }
 
   // Process the response
+  console.log(`researcher: processing the response: ${JSON.stringify(result)}`)
+
   const toolCalls: ToolCallPart[] = []
   const toolResponses: ToolResultPart[] = []
   for await (const delta of result.fullStream) {
     switch (delta.type) {
       case 'text-delta':
+        //console.log(`researcher: result is text-delta`)
         if (delta.textDelta) {
           fullResponse += delta.textDelta
           if (hasToolResult) {
@@ -86,16 +104,18 @@ export async function researcher(
         }
         break
       case 'tool-call':
+        console.log(`researcher: result is tool-call`)
         toolCalls.push(delta)
         break
       case 'tool-result':
+        console.log(`researcher: result is tool-result`)
         if (!delta.result) {
           hasError = true
         }
         toolResponses.push(delta)
         break
       case 'error':
-        console.log('Error: ' + delta.error)
+        console.log('researcher result Error: ' + delta.error)
         hasError = true
         fullResponse += `\nError occurred while executing the tool`
         break

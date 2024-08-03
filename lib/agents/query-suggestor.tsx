@@ -11,12 +11,29 @@ export async function querySuggestor(
   const objectStream = createStreamableValue<PartialRelated>()
   uiStream.append(<SearchRelated relatedQueries={objectStream.value} />)
 
-  const lastMessages = messages.slice(-1).map(message => {
-    return {
-      ...message,
-      role: 'user'
+  const openaiAssistantId = process.env.OPENAI_ASSISTANT_ID
+  let lastMessages
+  if (!openaiAssistantId) {
+    // We'll keep this false for now to always use the new logic
+    // Original logic
+    lastMessages = messages.slice(-1).map(message => {
+      return {
+        ...message,
+        role: 'user'
+      }
+    }) as CoreMessage[]
+  } else {
+    // New logic: Find the first user message
+    const userMessage = messages.find(message => message.role === 'user')
+
+    if (userMessage) {
+      lastMessages = [userMessage] as CoreMessage[]
+    } else {
+      // Fallback in case no user message is found
+      console.warn('No user message found in the conversation history.')
+      lastMessages = [] as CoreMessage[]
     }
-  }) as CoreMessage[]
+  }
 
   let finalRelatedQueries: PartialRelated = {}
   await streamObject({

@@ -101,14 +101,6 @@ export class OpenAIAssistantLanguageModel implements LanguageModelV1 {
     }
       */
 
-    const useLegacyFunctionCalling = this.settings.useLegacyFunctionCalling
-
-    if (useLegacyFunctionCalling && this.settings.parallelToolCalls === true) {
-      throw new UnsupportedFunctionalityError({
-        functionality: 'useLegacyFunctionCalling with parallelToolCalls'
-      })
-    }
-
     const baseArgs = {
       // model id:
       model: this.modelId,

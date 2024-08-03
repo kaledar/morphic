@@ -56,6 +56,7 @@ export const retrieveTool = ({ uiStream, fullResponse, from }: ToolProps) =>
 
       uiStream.update(<RetrieveSection data={results} />)
 
+      console.log(`image link retrieval has been done`)
       return results
     }
   })
