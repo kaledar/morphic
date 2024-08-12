@@ -322,7 +322,7 @@ export class OpenAIAssistantLanguageModel implements LanguageModelV1 {
       console.log(
         `customModel: run ended with unexpected status: ${runStatus.status}`
       )
-      throw new Error(`Unexpected run status: ${runStatus.status}`)
+      throw new Error(`Unexpected run status: ${JSON.stringify(runStatus)}`)
     }
   }
 

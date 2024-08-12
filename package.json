@@ -29,8 +29,10 @@
     "@tailwindcss/typography": "^0.5.12",
     "@upstash/redis": "^1.30.0",
     "ai": "^3.2.1",
+    "bad-words": "^3.0.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "compromise": "^14.14.0",
     "embla-carousel-react": "^8.0.0",
     "exa-js": "^1.0.12",
     "katex": "^0.16.10",
@@ -53,6 +55,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/bad-words": "^3.0.3",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

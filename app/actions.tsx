@@ -117,11 +117,14 @@ async function submit(
 
     // As we are using a domain set and tts we don't want inquire, intermediate step to refine user query
     // If the user skips the task, we proceed to the search
-    //if (!skip) action = (await taskManager(messages)) ?? action //get task manager for the action.
+    if (!skip) action = (await taskManager(messages)) ?? action //get task manager for the action.
 
     if (action.object.next === 'inquire') {
       // Generate inquiry
       const inquiry = await inquire(uiStream, messages)
+
+      console.log(`actions: inquire result: ${inquiry?.question}`)
+
       uiStream.done()
       isGenerating.done()
       isCollapsed.done(false)

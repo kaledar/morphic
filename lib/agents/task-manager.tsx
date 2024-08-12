@@ -1,22 +1,42 @@
 import { CoreMessage, generateObject } from 'ai'
 import { nextActionSchema } from '../schema/next-action'
 import { getModel } from '../utils'
+import { contentModerationMiddleware } from './content-moderator'
+import { getSensitiveTerms } from './content-filter-provider'
 
 // Decide whether inquiry is required for the user input
 export async function taskManager(messages: CoreMessage[]) {
+  //const moderatedMessages = await contentModerationMiddleware(messages)
+  const replacementMap = await getSensitiveTerms()
+  console.log(replacementMap) // Use this map in your moderation logic
   try {
     const result = await generateObject({
       //role: user & content: actual text in the 'messages'
       model: getModel(), //getting the underlying model: model is openai
-      system: `As a professional web researcher, your primary objective is to fully comprehend the user's query, conduct thorough web searches to gather the necessary information, and provide an appropriate response.
-    To achieve this, you must first analyze the user's input and determine the optimal course of action. You have two options at your disposal:
-    1. "proceed": If the provided information is sufficient to address the query effectively, choose this option to proceed with the research and formulate a response.
-    2. "inquire": If you believe that additional information from the user would enhance your ability to provide a comprehensive response, select this option. You may present a form to the user, offering default selections or free-form input fields, to gather the required details.
-    Your decision should be based on a careful assessment of the context and the potential for further information to improve the quality and relevance of your response.
-    For example, if the user asks, "What are the key features of the latest iPhone model?", you may choose to "proceed" as the query is clear and can be answered effectively with web research alone.
-    However, if the user asks, "What's the best smartphone for my needs?", you may opt to "inquire" and present a form asking about their specific requirements, budget, and preferred features to provide a more tailored recommendation.
-    Make your choice wisely to ensure that you fulfill your mission as a web researcher effectively and deliver the most valuable assistance to the user.
-    `,
+      system: `
+        You are a professional web researcher tasked with understanding the user's query and gathering the necessary information through web searches. However, before proceeding, it's crucial to ensure that the user-generated content is appropriate, adheres to community guidelines, and respects the cultural and regional or terror sensitivities of Turkey.
+To achieve this, you must first analyze the user's input and determine the best course of action. You have two options: "proceed" or "inquire."
+Follow these steps to decide which option to take:
+
+Step 1: Content Moderation
+
+BLOCK CATEGORY: Identify and moderate content that contains offensive language, hate speech, sensitive political topics, explicit content, or any form of discrimination and more importantly Turkey's security concerns and Turkey's policies.
+You are also provided with a block list of specific phrases or terms that are sensitive. 
+These terms are mapped in the provided JSON and should be evaluated contextually, considering synonyms, acronyms, or similar phrases.
+Action: Replace any sensitive terms with safer alternatives using the following replacements:
+${JSON.stringify(replacementMap, null, 2)}
+
+After performing the necessary replacements, proceed to Step 2. In most cases, you should select the "inquire" option to gather more information or confirm the content with the user.
+
+Step 2: Task Decision
+"proceed": Choose this option if the provided information is sufficient, the content is appropriate, and you can address the query effectively without further clarification.
+"inquire": Choose this option if additional information from the user could enhance your ability to provide a more comprehensive and contextually appropriate response. Present a form to the user with default selections or free-form input fields to gather the required details.
+
+Your decision should carefully consider the context, the appropriateness of the content, and whether additional information could improve the quality and relevance of your response. 
+Always prioritize content moderation and, when in doubt, lean towards the "inquire" option to ensure your response is accurate, appropriate, and valuable to the user.
+Please match the language of the response to the user's language used in the queries and prompts.      
+`,
+      //moderatedMessages,
       messages,
       schema: nextActionSchema // inquire or proceed
     })

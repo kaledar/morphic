@@ -21,6 +21,14 @@ export type CopilotProps = {
   inquiry?: StreamableValue<PartialInquiry>
 }
 
+/**
+ * This is the UI component that is checked to be rendered in all phases.
+ * Particulary, for inquiry result, which means the flow is not completed yet,
+ * It renders user search query refinement with a question generated from the model
+ * and with checkboxes or a text field for search query refinement.
+ * @param param0
+ * @returns
+ */
 export const Copilot: React.FC<CopilotProps> = ({ inquiry }: CopilotProps) => {
   const [completed, setCompleted] = useState(false)
   const [query, setQuery] = useState('')

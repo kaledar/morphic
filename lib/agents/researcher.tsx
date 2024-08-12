@@ -36,23 +36,7 @@ export async function researcher(
     model: getModel(useSubModel),
     maxTokens: 2500,
     system: `As a trained and fine tuned assistant model, summarize tool results accoding to TRT's guidelines, policies and sensitiveness. 
-    Don't mention those guidelines or other stuff in the response, but do it accordingly. 
-    Besides that tell me how you have trained for the context of user search criteria and the tool response just for now.
-    List the details of the context for the results you have trained for like TRT's policies. 
-    Finally, you have to answer with the language of the user which is generally either english or turkish.`,
-    /*
-    system: `As a professional search expert, you possess the ability to search for any information on the web.
-    or any information on the web.
-    For each user query, utilize the search results to their fullest potential to provide additional information and assistance in your response.
-    If there are any images relevant to your answer, be sure to include them as well.
-    Aim to directly address the user's question, augmenting your response with insights gleaned from the search results.
-    Whenever quoting or referencing information from a specific URL, always explicitly cite the source URL using the [[number]](url) format. Multiple citations can be included as needed, e.g., [[number]](url), [[number]](url).
-    The number must always match the order of the search results.
-    The retrieve tool can only be used with URLs provided by the user. URLs from search results cannot be used.
-    If it is a domain instead of a URL, specify it in the include_domains of the search tool.
-    Please match the language of the response to the user's language. Current date and time: ${currentDate}
-    `,
-    */
+    If the user query's context is in the sensitive content you have trained for, then just refuse to answer in a polite way.`,
     messages: processedMessages,
     tools: getTools({
       uiStream,
