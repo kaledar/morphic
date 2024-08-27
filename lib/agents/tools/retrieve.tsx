@@ -10,6 +10,7 @@ export const retrieveTool = ({ uiStream, fullResponse, from }: ToolProps) =>
     description: 'Retrieve content from the web',
     parameters: retrieveSchema,
     execute: async ({ url }) => {
+      // console.log(`tools: retrieveTool: Retrieve content from the web`)
       let hasError = false
       // Append the search section
       uiStream.append(<SearchSkeleton />)
@@ -25,8 +26,16 @@ export const retrieveTool = ({ uiStream, fullResponse, from }: ToolProps) =>
         })
         const json = await response.json()
         if (!json.data || json.data.length === 0) {
+          // console.log(`tools: retrieveTool: no results`)
           hasError = true
         } else {
+          /*
+          console.log(
+            `tools: retrieveTool: has results: ${JSON.stringify(
+              json.data.content.substring(0, 1000)
+            )}`
+          )
+          */
           // Limit the content to 5000 characters
           if (json.data.content.length > 5000) {
             json.data.content = json.data.content.slice(0, 5000)

@@ -25,6 +25,22 @@ import { transformToolMessages } from '@/lib/utils'
 import { AnswerSection } from '@/components/answer-section'
 import { ErrorCard } from '@/components/error-card'
 import { FromSingleton } from '@/lib/contexts/from-singleton'
+import { VideoSearchSectionSeparate } from '@/components/video-search-section-separate'
+
+function getUserQuery(messages: CoreMessage[]): string {
+  return messages
+    .filter(message => message?.role === 'user')
+    .map(userMessage => {
+      try {
+        const parsedContent = JSON.parse(userMessage.content as string)
+        return parsedContent.input || parsedContent.additional_query || ''
+      } catch {
+        return (userMessage.content as any).text || ''
+      }
+    })
+    .filter(content => content) // Remove empty strings
+    .join(' ')
+}
 
 async function submit(
   formData?: FormData,
@@ -68,7 +84,7 @@ async function submit(
   messages.splice(0, Math.max(messages.length - maxMessages, 0))
 
   // Get the user input from the form data
-  let userInput = skip
+  const userInput = skip
     ? `{"action": "skip"}`
     : (formData?.get('input') as string)
 
@@ -200,6 +216,7 @@ async function submit(
 
     // If useSpecificAPI is enabled, generate the answer using the specific model
     if (useSpecificAPI && answer.length === 0 && !errorOccurred) {
+      //console.log(`using specific api...`)
       // modify the messages to be used by the specific model
       const modifiedMessages = transformToolMessages(messages)
       const latestMessages = modifiedMessages.slice(maxMessages * -1)
@@ -246,6 +263,14 @@ async function submit(
         `generating related queries with querySuggested: ${JSON.stringify(
           processedMessages
         ).substring(0, 1000)}`
+      )
+
+      const userQuery = getUserQuery(messages)
+      //console.log(`userQuery is: ${userQuery}`)
+      uiStream.append(
+        <Section title="Videos">
+          {userQuery && <VideoSearchSectionSeparate query={userQuery} />}
+        </Section>
       )
 
       // Generate related queries
@@ -452,6 +477,9 @@ export const getUIStateFromAIState = (aiState: Chat) => {
         case 'tool':
           try {
             const toolOutput = JSON.parse(content)
+            console.log(
+              `toolOutput: ${JSON.stringify(toolOutput).substring(0, 500)}`
+            )
             const isCollapsed = createStreamableValue()
             isCollapsed.done(true)
             const searchResults = createStreamableValue()

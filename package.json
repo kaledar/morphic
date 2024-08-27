@@ -28,6 +28,7 @@
     "@radix-ui/react-tooltip": "^1.0.7",
     "@tailwindcss/typography": "^0.5.12",
     "@upstash/redis": "^1.30.0",
+    "@videojs/http-streaming": "^3.13.2",
     "ai": "^3.2.1",
     "bad-words": "^3.0.4",
     "class-variance-authority": "^0.7.0",
@@ -52,6 +53,9 @@
     "sonner": "^1.4.41",
     "tailwind-merge": "^2.2.2",
     "tailwindcss-animate": "^1.0.7",
+    "video.js": "^8.17.3",
+    "videojs-contrib-quality-levels": "^4.1.0",
+    "videojs-http-source-selector": "^1.1.6",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -59,6 +63,7 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/video.js": "^7.3.58",
     "eslint": "^8",
     "eslint-config-next": "^14.2.3",
     "postcss": "^8",

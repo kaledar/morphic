@@ -3,7 +3,6 @@ import { CoreMessage, ToolCallPart, ToolResultPart, streamText } from 'ai'
 import { getTools } from './tools'
 import { getModel, transformToolMessages } from '../utils'
 import { AnswerSection } from '@/components/answer-section'
-import { ModeToggle } from '../../components/mode-toggle'
 
 export async function researcher(
   uiStream: ReturnType<typeof createStreamableUI>,
@@ -21,8 +20,8 @@ export async function researcher(
   const useOllamaProvider = !!(
     process.env.OLLAMA_MODEL && process.env.OLLAMA_BASE_URL
   )
-  //if (useOllamaProvider) {
-  if (true) {
+  if (useOllamaProvider || process.env.OPENAI_ASSISTANT_ID) {
+    //console.log(`transforming tool messages:...`)
     processedMessages = transformToolMessages(messages) //This is required in our case!!
   }
   const includeToolResponses = messages.some(message => message.role === 'tool')
@@ -31,7 +30,6 @@ export async function researcher(
   const streambleAnswer = createStreamableValue<string>('')
   const answerSection = <AnswerSection result={streambleAnswer.value} />
 
-  const currentDate = new Date().toLocaleString()
   const result = await streamText({
     model: getModel(useSubModel),
     maxTokens: 2500,
@@ -43,7 +41,7 @@ export async function researcher(
       fullResponse,
       from
     }),
-    toolChoice: 'required',
+    //toolChoice: 'required', //This breaks normal llm models!!
     onFinish: async event => {
       console.log(`researcher: streamText has been finished..`)
       finishReason = event.finishReason
@@ -70,7 +68,14 @@ export async function researcher(
   }
 
   // Process the response
-  console.log(`researcher: processing the response: ${JSON.stringify(result)}`)
+  /*
+  console.log(
+    `researcher: processing the response: ${JSON.stringify(result).substring(
+      0,
+      500
+    )}`
+  )
+  */
 
   const toolCalls: ToolCallPart[] = []
   const toolResponses: ToolResultPart[] = []
@@ -88,11 +93,18 @@ export async function researcher(
         }
         break
       case 'tool-call':
-        console.log(`researcher: result is tool-call`)
+        // console.log(`researcher: result is tool-call: ${delta}`)
         toolCalls.push(delta)
         break
       case 'tool-result':
-        console.log(`researcher: result is tool-result`)
+        /*
+        console.log(
+          `researcher: result is tool-result: ${JSON.stringify(delta).substring(
+            0,
+            500
+          )}`
+        )
+        */
         if (!delta.result) {
           hasError = true
         }

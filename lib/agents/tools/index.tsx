@@ -15,15 +15,17 @@ export const getTools = ({ uiStream, fullResponse, from }: ToolProps) => {
       uiStream,
       fullResponse,
       from
-    }),
+    }) /*,
     retrieve: retrieveTool({
       uiStream,
       fullResponse,
       from
     })
+      */
   }
 
-  if (process.env.SERPER_API_KEY) {
+  if (process.env.ENABLE_CUSTOM_VIDEO_SEARCH === 'true') {
+    // console.log(`videoSearch is active`)
     tools.videoSearch = videoSearchTool({
       uiStream,
       fullResponse,

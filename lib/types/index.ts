@@ -34,12 +34,33 @@ export type ExaSearchResultItem = {
 
 export type SerperSearchResultItem = {
   title: string
-  link: string
+  link: string //video link with videoId something
   snippet: string
   imageUrl: string
   duration: string
   source: string
-  channel: string
+  channel: string //metadata, youtube channel info displayed in alt of avatar
+  date: string
+  position: number
+}
+
+export type VideoSearchResultList = {
+  videos: VideoSearchResultItem[]
+}
+
+export type VideoSearchResultItem = {
+  assetId: string
+  videoId: string
+  baseUrl: string
+  s3Key: string
+  playlistUrl: string
+  type: string
+  title: string
+  snippet: string
+  imageUrl: string
+  duration: string
+  source: string
+  channel: string //metadata, youtube channel info displayed in alt of avatar
   date: string
   position: number
 }

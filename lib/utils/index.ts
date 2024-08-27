@@ -18,7 +18,7 @@ export function getModel(useSubModel = false) {
   const openaiApiBase = process.env.OPENAI_API_BASE
   const openaiApiKey = process.env.OPENAI_API_KEY
   let openaiApiModel = process.env.OPENAI_API_MODEL || 'gpt-4o'
-  const openaiAssistantId = process.env.OPENAI_ASSISTANT_ID || 'assistantId'
+  const openaiAssistantId = process.env.OPENAI_ASSISTANT_ID
   const googleApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
   const anthropicApiKey = process.env.ANTHROPIC_API_KEY
 

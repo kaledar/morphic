@@ -4,7 +4,7 @@ import Exa from 'exa-js'
 import { searchSchema } from '@/lib/schema/search'
 import { SearchSection } from '@/components/search-section'
 import { ToolProps } from '.'
-import { SearchResults } from '@/lib/types'
+import { SearchResultItem } from '@/lib/types'
 
 export const searchTool = ({ uiStream, fullResponse, from }: ToolProps) =>
   tool({
@@ -16,6 +16,12 @@ export const searchTool = ({ uiStream, fullResponse, from }: ToolProps) =>
       search_depth,
       include_domains,
       exclude_domains
+    }: {
+      query: string
+      max_results: number
+      search_depth: 'basic' | 'advanced'
+      include_domains: string[]
+      exclude_domains: string[]
     }) => {
       console.log(`Executing search...(RA)G`)
       let hasError = false
@@ -79,6 +85,11 @@ export const searchTool = ({ uiStream, fullResponse, from }: ToolProps) =>
         return searchResult
       }
 
+      /*
+      console.log(
+        `search results: ${JSON.stringify(searchResult).substring(0, 200)}`
+      )
+      */
       streamResults.done(JSON.stringify(searchResult))
 
       console.log(`search has been done!`)
@@ -135,7 +146,7 @@ async function exaSearch(
   })
 }
 
-async function getRecommendations(query: string): Promise<SearchResults> {
+async function getRecommendations(query: string): Promise<any> {
   const template =
     process.env.RECOMMENDATION_API_URL ||
     'http://localhost:3334/search-news-assets?searchQuery={query}'
@@ -146,10 +157,20 @@ async function getRecommendations(query: string): Promise<SearchResults> {
     const response = await fetch(url)
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
     const responseData = await response.json()
+
+    // Map the API results to the simplified SearchResultItem type
+    const results: SearchResultItem[] = responseData.results.map(
+      (item: any) => ({
+        title: item.title,
+        url: item.url,
+        content: item.content
+      })
+    )
+
     return {
       query, // Pass the original query for consistency.
       images: responseData.images,
-      results: responseData.results
+      results: results
     }
   } catch (error) {
     console.error('Failed to fetch recommendations:', error)
